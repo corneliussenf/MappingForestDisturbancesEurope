@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+	<idinfo>
+		<descript>
+			<abstract>This map depicts the 825 terrestrial ecoregions of the globe.
+Ecoregions are relatively large units of land containing distinct
+assemblages of natural communities and species, with boundaries that
+approximate the original extent of natural communities prior to major
+land-use change.  This comprehensive, global map provides a useful
+framework for conducting biogeographical or macroecological research,
+for identifying areas of outstanding biodiversity and conservation
+priority, for assessing the representation and gaps in conservation
+efforts worldwide, and for communicating the global distribution of
+natural communities on earth. We have based ecoregion delineations on
+hundreds of previous biogeographical studies, and refined and
+synthesized existing information in regional workshops over 10 years to
+assemble the global dataset.  Ecoregions are nested within two
+higher-order classifications: biomes (14) and biogeographic realms (8).
+Together, these nested classification levels provide a framework for
+comparison among units and the identification of representative habitats
+and species assemblages.  Ecoregions have increasingly been adopted by
+research scientists, conservation organizations, and donors as a
+framework for analyzing biodiversity patterns, assessing conservation
+priorities, and directing effort and support (Ricketts et al. 1999a;
+Wikramanayake et al. 2001; Ricketts et al. 1999b; Olson &amp;amp; Dinerstein
+1998; Groves et al. 2000; Rosenzweig et al. 2003; and Luck et al. 2003).
+More on the approach to ecoregion mapping, the logic and design of the
+framework, and previous and potential uses are discusses in Olson et al.
+(2001) and Ricketts et al. (1999a).&lt;br /&gt;
+&lt;br /&gt;
+&lt;br /&gt;</abstract>
+			<purpose/>
+			<supplinf/>
+		</descript>
+		<useconst>&lt;a rel="license" style="float:right;" href="http://creativecommons.org/licenses/by-nc/3.0/" target="_blank"&gt;&lt;img alt="Creative Commons License" style="border-width:0" src="http://creativecommons.org/images/public/somerights20.png" /&gt;&lt;/a&gt;This work is licensed under a &lt;a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/"  target="_blank"&gt;Creative Commons Attribution-Noncommercial 3.0 License&lt;/a&gt;.</useconst>
+		<datacred>Groves, C., L. Valutis, D. Vosick, B. Neely, K. Wheaton, J. Touval, and 
+B. Runnels. 2000. Designing a Geography of Hope: A practitioner's 
+handbook to ecoregional conservation planning. The Nature Conservancy, 
+Arlington, VA.&lt;br /&gt;&lt;br /&gt;Luck, G.W., T.H. Ricketts, G.C. Daily, M. Imhoff 
+(2003). Spatial conflict between people and biodiversity. Procedings of 
+the National Academy of Sciences - US. 101(1):182-186.&lt;br /&gt;&lt;br /&gt;Olson, 
+D.M., and E. Dinerstein. 1998. The Global 200: a representation approach
+ to conserving the Earth's most biologically valuable ecoregions. 
+Conservation Biology 12:502-515.&lt;br /&gt;&lt;br /&gt;Olson, D.M., E. Dinerstein, E.D.
+ Wikramanayake, N.D. Burgess, G.V.N. Powell, E.C. Underwood, J.A. 
+D'Amico, I. Itoua, H.E. Strand, J.C. Morrison, C.J. Loucks, T.F. 
+Allnutt, T.H. Ricketts, Y. Kura, J.F. Lamoreux, W.W. Wettengel, P. 
+Hedao, and K.R. Kassem. 2001.  Terrestrial ecoregions of the world: New 
+map of life on earth. Bioscience 51(11):933-938.&lt;br /&gt;&lt;br /&gt;Ricketts, T.H., 
+E. Dinerstein, D.M. Olson, C. Loucks. 1999.  Who's where in North 
+America? Patterns of species richness and the utility of indicator taxa 
+for conservation.  Bioscience 49(5):369-381.&lt;br /&gt;&lt;br /&gt;Ricketts, T.H., E. 
+Dinerstein, D.M. Olson, C.J. Loucks, W. Eichbaum, K. Kavanagh, P. Hedao,
+ P. Hurley, K.M. Carney, R. Abell, and S. Walters. 1999.  Ecoregions of 
+North America: A conservation assessment.  Island Press. Washington DC. 
+485 pp.&lt;br /&gt;&lt;br /&gt;Rosenzweig, M.L., W. Turner, J.G. Cox, and T.H. Ricketts.
+ 2003. Estimating diversity in unsampled habitats of a biogeographical 
+province. Conservation Biology 17(3):864-874.&lt;br /&gt;&lt;br /&gt;Wikramanayake, E., 
+E. Dinerstein, C. Loucks, D. Olson, J. Morrison, J. Lamoreux, M. 
+McKnight, and P. Hedao. 2001. Terrestrial ecoregions of the 
+Indo-Pacific: a Conservation assessment. Island Press, Washington, DC.</datacred>
+		<citation>
+			<citeinfo>
+				<title>Terrestrial Ecoregions of the World</title>
+				<pubdate/>
+				<othercit>Olson, D.M., E. Dinerstein, E.D. Wikramanayake, N.D. Burgess, G.V.N.
+Powell, E.C. Underwood, J.A. D'Amico, I. Itoua, H.E. Strand, J.C.
+Morrison, C.J. Loucks, T.F. Allnutt, T.H. Ricketts, Y. Kura, J.F.
+Lamoreux, W.W. Wettengel, P. Hedao, and K.R. Kassem. Terrestrial
+Ecoregions of the World: A New Map of Life on Earth (PDF, 1.1M)
+BioScience 51:933-938.&lt;br /&gt;</othercit>
+				<origin>World Wildlife Fund - USA</origin>
+				<onlink>http://app.databasin.org/app/pages/datasetPage.jsp?id=68635d7c77f1475f9b6c1d1dbe0a4c4c</onlink>
+				<pubinfo>
+					<publish/>
+					<pubplace/>
+				</pubinfo>
+			</citeinfo>
+		</citation>
+		<ptcontac>
+			<cntinfo>
+				<cntperp>
+					<cntper>Nasser Olwero (nasser.olwero@wwfus.org)</cntper>
+					<cntorg>Conservation Science Program - World Wildlife Fund</cntorg>
+				</cntperp>
+			</cntinfo>
+		</ptcontac>
+		<status>
+			<progress/>
+			<update/>
+		</status>
+		<timeperd>
+			<timeinfo>
+				<sngdate/>
+				<current/>
+			</timeinfo>
+		</timeperd>
+		<keywords/>
+		<spdom>
+			<bounding>
+				<northbc>83.62312517169381</northbc>
+				<eastbc>179.9999885408441</eastbc>
+				<southbc>-88.99999999999993</southbc>
+				<westbc>-179.9999885408441</westbc>
+			</bounding>
+		</spdom>
+	</idinfo>
+	<dataqual>
+		<attracc>
+			<attraccr/>
+		</attracc>
+		<complete/>
+		<lineage/>
+	</dataqual>
+	<eainfo>
+		<detailed>
+			<attr>
+				<attrlabl>FID</attrlabl>
+				<attalias>FID</attalias>
+				<attrdef/>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>Shape</attrlabl>
+				<attalias>Shape</attalias>
+				<attrdef/>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>OBJECTID</attrlabl>
+				<attalias>OBJECTID</attalias>
+				<attrdef>Internal feature number.</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>AREA</attrlabl>
+				<attalias>AREA</attalias>
+				<attrdef>Area of each individual polygon in square kilometers.  The attribute area_km2 is a sum of this field for each ecoregion as a whole.</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>PERIMETER</attrlabl>
+				<attalias>PERIMETER</attalias>
+				<attrdef/>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>ECO_NAME</attrlabl>
+				<attalias>ECO_NAME</attalias>
+				<attrdef>Ecoregion Name</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>REALM</attrlabl>
+				<attalias>REALM</attalias>
+				<attrdef>Biogeographical Realm</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>BIOME</attrlabl>
+				<attalias>BIOME</attalias>
+				<attrdef>Biome</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>ECO_NUM</attrlabl>
+				<attalias>ECO_NUM</attalias>
+				<attrdef>A unique number for each ecoregion within each biome nested within each realm.</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>ECO_ID</attrlabl>
+				<attalias>ECO_ID</attalias>
+				<attrdef>This number is created by combining REALM, BIOME, and ECO_NUM, thus creating a unique numeric ID for each ecoregion.</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>ECO_SYM</attrlabl>
+				<attalias>ECO_SYM</attalias>
+				<attrdef>Ecoregion Symbol - Used to display the map in ArcInfo</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>GBL_STAT</attrlabl>
+				<attalias>GBL_STAT</attalias>
+				<attrdef>Global Status</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>G200_REGIO</attrlabl>
+				<attalias>G200_REGIO</attalias>
+				<attrdef>Global 200 Name</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>G200_NUM</attrlabl>
+				<attalias>G200_NUM</attalias>
+				<attrdef>Global 200 Number</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>G200_BIOME</attrlabl>
+				<attalias>G200_BIOME</attalias>
+				<attrdef>Global 200 Biome - The biome of the Global 200 region that the ecoregion is a component of. Occasionally a Global 200 region is made up of ecoregions of different biomes. In this case, for a particular ecoregion, the G200_BIOME may be different from the original biome. For a description of each Global 200 biome (1-14), see BIOME.</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>G200_STAT</attrlabl>
+				<attalias>G200_STAT</attalias>
+				<attrdef>Global 200 Conservation status</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>Shape_Leng</attrlabl>
+				<attalias>Shape_Leng</attalias>
+				<attrdef/>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>Shape_Area</attrlabl>
+				<attalias>Shape_Area</attalias>
+				<attrdef>Area of feature in internal units squared.</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>area_km2</attrlabl>
+				<attalias>area_km2</attalias>
+				<attrdef>Area of the Ecoregion (km2)</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>eco_code</attrlabl>
+				<attalias>eco_code</attalias>
+				<attrdef>This is an alphanumeric code that is similar to eco_ID but a little easier to interpret.  The first 2 characters (letters) are the realm the ecoregion is in.  The 2nd 2 characters are the biome and the last 2 characters are the ecoregion number.</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>BIOME_1</attrlabl>
+				<attalias>BIOME_1</attalias>
+				<attrdef>Biome - LABEL</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>G200_STAT_</attrlabl>
+				<attalias>GBL_STAT_1</attalias>
+				<attrdef/>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>GBL_STAT_1</attrlabl>
+				<attalias>REALM_1</attalias>
+				<attrdef>Global Status - LABEL</attrdef>
+				<attrdomv/>
+			</attr>
+			<attr>
+				<attrlabl>REALM_1</attrlabl>
+				<attalias>G200_STAT_</attalias>
+				<attrdef>Biogeographical Realm - LABEL</attrdef>
+				<attrdomv/>
+			</attr>
+		</detailed>
+	</eainfo>
+	<distinfo>
+		<resdesc>Terrestrial Ecoregions of the World</resdesc>
+		<distrib>
+			<cntinfo>
+				<cntorgp>
+					<cntorg>Data Basin (www.databasin.org)</cntorg>
+				</cntorgp>
+				<cntemail>databasin@consbio.org</cntemail>
+				<cntorgp/>
+			</cntinfo>
+			<cntinfo/>
+			<cntinfo/>
+		</distrib>
+		<stdorder>
+			<digform>
+				<digtopt>
+					<onlinopt>
+						<computer>
+							<networka>
+								<networkr>http://app.databasin.org/app/pages/datasetPage.jsp?id=68635d7c77f1475f9b6c1d1dbe0a4c4c</networkr>
+							</networka>
+						</computer>
+					</onlinopt>
+				</digtopt>
+			</digform>
+		</stdorder>
+	</distinfo>
+	<Esri><CreaDate>20161218</CreaDate><CreaTime>21530800</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce><DataProperties><itemProps><itemLocation><linkage Sync="TRUE">file://\\IP-0A5317A4\C\arcgisserver\services\im2\68635d7c77f1475f9b6c1d1dbe0a4c4c\68635d7c77f1475f9b6c1d1dbe0a4c4c\commondata\data0\wwf_terr_ecos</linkage><protocol Sync="TRUE">Local Area Network</protocol></itemLocation></itemProps><copyHistory><copy source="C:\arcgisserver\services\im2\68635d7c77f1475f9b6c1d1dbe0a4c4c\commondata\data0\wwf_terr_ecos" dest="\\IP-0A5317A4\C\arcgisserver\services\im2\68635d7c77f1475f9b6c1d1dbe0a4c4c\68635d7c77f1475f9b6c1d1dbe0a4c4c\commondata\data0\wwf_terr_ecos" date="20110513" time="06205800"></copy></copyHistory></DataProperties></Esri></metadata>
