@@ -8,7 +8,7 @@ library(fasterize)
 
 #### Aggregate data to grid/hexagon ####
 
-country_master <- read_csv("data/countries_master.csv") %>%
+country_master <- read_delim("data/countries_master.csv", delim = ";") %>%
   filter(country_name_short != "russia")
 
 ending <- "hexagon_50km"
@@ -69,7 +69,7 @@ for (i in 1:nrow(country_master)) {
     set_names(c(1986:2018)) %>%
     bind_rows(.id = "year")
   
-  write_csv(dat, paste0("indicators/indicators_patch_", ending, "_", cntr, ".csv"))
+  write_csv(dat, paste0("results/indicators/indicators_patch_", ending, "_", cntr, ".csv"))
   
 }
 
@@ -99,7 +99,7 @@ for (i in 1:nrow(country_master)) {
               land_ha = n() * 0.09) %>%
     ungroup(.)
   
-  write_csv(dat, paste0("indicators/forest_land_", ending, "_", cntr, ".csv"))
+  write_csv(dat, paste0("results/indicators/forest_land_", ending, "_", cntr, ".csv"))
   
 }
 
@@ -133,7 +133,7 @@ for (i in 1:nrow(country_master)) {
   
   
   
-  write_csv(dat, paste0("indicators/ecoregions_patch_", ending, "_", cntr, ".csv"))
+  write_csv(dat, paste0("results/indicators/ecoregions_patch_", ending, "_", cntr, ".csv"))
   
 }
 
@@ -146,16 +146,16 @@ reference_grid <- read_sf("data/admin/referencegrid/hexagon_50km.shp")
 
 countries <- read_sf("data/admin/borders/countries_europe.shp")
 
-country_master <- read_csv("LandTrendr/countries_master.csv") %>%
+country_master <- read_delim("data/countries_master.csv", delim = ";") %>%
   filter(country_name_short != "russia")
 
-names <- list.files("indicators", pattern = glob2rx("*indicators*.csv")) %>%
+names <- list.files("results/indicators", pattern = glob2rx("*indicators*.csv")) %>%
   grep(., pattern = "hexagon", inv = FALSE, value = TRUE) %>%
   strsplit(., "_") %>%
   map(., ~ substring(.[5], 1, nchar(.[5]) - 4)) %>%
   unlist()
 
-dat <- list.files("indicators", pattern = glob2rx("*indicators*.csv"), full.names = TRUE) %>%
+dat <- list.files("results/indicators", pattern = glob2rx("*indicators*.csv"), full.names = TRUE) %>%
   grep(., pattern = "hexagon", inv = FALSE, value = TRUE) %>%
   map(read_csv) %>%
   set_names(names) %>%
@@ -165,7 +165,7 @@ dat <- dat %>%
   filter(year < 2017) %>%
   mutate(size = ifelse(size == 0.09, 0.18, size))
 
-forest <- list.files("indicators", pattern = glob2rx("*forest_land*.csv"), full.names = TRUE) %>%
+forest <- list.files("results/indicators", pattern = glob2rx("*forest_land*.csv"), full.names = TRUE) %>%
   grep(., pattern = "hexagon", inv = FALSE, value = TRUE) %>%
   map(read_csv) %>%
   set_names(names) %>%
@@ -184,7 +184,7 @@ forest_country <- forest %>%
 library(Rcpp)
 sourceCpp("lib/misc/fasttable.cpp")
 
-ecoregions_files <- list.files("LandTrendr/indicators", pattern = glob2rx("*ecoregions*.csv"), full.names = TRUE) %>%
+ecoregions_files <- list.files("results/indicators", pattern = glob2rx("*ecoregions*.csv"), full.names = TRUE) %>%
   grep(., pattern = "hexagon", inv = FALSE, value = TRUE) %>%
   map(read_csv) %>%
   set_names(names) %>%
@@ -255,6 +255,7 @@ reference_grid <- read_sf("data/admin/referencegrid/hexagon_50km.shp")
 europe_outline <- read_sf("data/admin/borders/countries_europe_outline.shp")
 world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
 world <- st_transform(world, projection(reference_grid))
+st_crs(world) <- st_crs(reference_grid)
 world <- st_crop(world, st_bbox(reference_grid) + c(-0.05, -0.05, 0.01, 0.01) * as.double(st_bbox(reference_grid)))
 
 reference_grid <- reference_grid %>%
@@ -419,10 +420,10 @@ p_trends <- list(var = c("size_trend",
       coord_sf(expand = FALSE)
   })
 
-ggsave("LandTrendr/results/disturbance_regime_trend.pdf", p_trends %>%
+ggsave("results/disturbance_regime_trend.pdf", p_trends %>%
          wrap_plots(ncol = 3), width = 7, height = 2.5, device = cairo_pdf)
 
-ggsave("LandTrendr/results/disturbance_regime_trend.png", p_trends %>%
+ggsave("results/disturbance_regime_trend.png", p_trends %>%
          wrap_plots(ncol = 3), width = 7, height = 2.5)
 
 # Histrograms
@@ -459,10 +460,10 @@ p_trends_hist <- pmap(list(var = c("size_trend",
          xlim(-5, 11)
      })
 
-ggsave("LandTrendr/results/disturbance_regime_trend_hist.pdf", p_trends_hist %>%
+ggsave("results/disturbance_regime_trend_hist.pdf", p_trends_hist %>%
          wrap_plots(ncol = 3), width = 6.25, height = 1.75, device = cairo_pdf)
 
-ggsave("LandTrendr/results/disturbance_regime_trend_hist.png", p_trends_hist %>%
+ggsave("results/disturbance_regime_trend_hist.png", p_trends_hist %>%
          wrap_plots(ncol = 3), width = 6.25, height = 1.75)
 
 #### Separate frequency and size trends ####
@@ -488,7 +489,7 @@ p <- ggplot(reference_grid, aes(x = frequency_trend, y = rate_trend)) +
   guides(colour = guide_colorbar(title.position = "top", barwidth = 6, barheight = 0.5)) +
   xlim(-5, 11) + ylim(-5, 11)
 
-ggsave("LandTrendr/results/frequency_size_rate.pdf", p, width = 3.42, height = 3.42)
+ggsave("results/frequency_size_rate.pdf", p, width = 3.42, height = 3.42)
 
 ggplot(reference_grid) + 
   geom_point(aes(x = n_trend, y = size_trend, col = rate_trend)) + 
