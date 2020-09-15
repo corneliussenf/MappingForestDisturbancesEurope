@@ -144,7 +144,7 @@ ecoregions <- st_transform(ecoregions, CRS("+proj=laea +lat_0=52 +lon_0=10 +x_0=
 
 reference_grid <- read_sf("data/admin/referencegrid/hexagon_50km.shp")
 
-countries <- read_sf("data/admin/borders/countries_europe.shp")
+countries <- read_sf("data/admin/borders/countries_europe_simplyfied.shp")
 
 country_master <- read_delim("data/countries_master.csv", delim = ";") %>%
   filter(country_name_short != "russia")
@@ -247,12 +247,12 @@ dat_grid_summary <- dat_grid %>%
             maxsize_trend = trend::sens.slope(maxsize)$estimate / maxsize_mean * 100,
             mediansize_trend = trend::sens.slope(mediansize)$estimate / mediansize_mean * 100,
             intermedsize_trend = trend::sens.slope(intermedsize)$estimate / intermedsize_mean * 100,
-            prop_sr_trend = trend::sens.slope(prop_sr)$estimate / prop_sr_mean,
-            severity_trend = trend::sens.slope(severity)$estimate / severity_mean,
+            prop_sr_trend = trend::sens.slope(prop_sr)$estimate / prop_sr_mean  * 100,
+            severity_trend = trend::sens.slope(severity)$estimate / severity_mean  * 100,
             rate_trend = trend::sens.slope(rate)$estimate / rate_mean * 100)
 
 reference_grid <- read_sf("data/admin/referencegrid/hexagon_50km.shp")
-europe_outline <- read_sf("data/admin/borders/countries_europe_outline.shp")
+europe_outline <- read_sf("data/admin/borders/countries_europe_outline_simplyfied.shp")
 world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
 world <- st_transform(world, projection(reference_grid))
 st_crs(world) <- st_crs(reference_grid)
@@ -274,9 +274,9 @@ p_averages <- list(var = c("size_mean",
     ggplot() +
       geom_sf(data = world, color = "black", fill = gray(0.99)) +
       geom_sf(data = reference_grid, aes_string(fill = var), col = NA) +
-      geom_sf(data = countries, color = gray(0.5), fill = NA, alpha = 0.75) +
+      geom_sf(data = countries, color = gray(0.5), fill = NA, alpha = 0.75, size = 0.25) +
       #geom_sf(data = ecoregions, color = gray(0.01), fill = NA) +
-      geom_sf(data = europe_outline, color = gray(0.01), fill = NA) +
+      geom_sf(data = europe_outline, color = gray(0.01), fill = NA, size = 0.5) +
       scale_fill_gradient(low = "white", 
                           high = RColorBrewer::brewer.pal(3, "Set1")[[1]],
                           na.value = gray(0.95)) +
@@ -360,16 +360,17 @@ p_averages_hist <-  pmap(list(d = list(size_distribution,
                              theme(panel.grid = element_blank(), 
                                    panel.border = element_blank(),
                                    legend.position = "none",
+                                   axis.ticks.y = element_line(),
                                    axis.title = element_text(size = 9),
                                    axis.text = element_text(size = 7)) +
                              labs(x = xlab, y = ylab)
                          })
 
 ggsave("results/disturbance_regime_average_hist.pdf", p_averages_hist %>%
-         wrap_plots(ncol = 3), width = 6.75, height = 1.75, device = cairo_pdf)
+         wrap_plots(ncol = 3), width = 6.75, height = 2, device = cairo_pdf)
 
 ggsave("results/disturbance_regime_average_hist.png", p_averages_hist %>%
-         wrap_plots(ncol = 3), width = 6.75, height = 1.75)
+         wrap_plots(ncol = 3), width = 6.75, height = 2)
 
 ### Trends
 
@@ -379,19 +380,14 @@ p_trends <- list(var = c("size_trend",
           title = c("Trend in disturbance size",
                     "Trend in disturbance frequency",
                     "Trend in disturbance severity"),
-          unit = c("% change\nper year", "% change\nper year", "% change\nper year"),
-          leg_pos = c("none", "none", "right")) %>%
+          unit = c(NULL, "Change per year (%)", NULL),
+          leg_pos = c("none", "bottom", "none")) %>%
   pmap(function(var, title, unit, leg_pos) {
     ggplot() +
       geom_sf(data = world, color = "black", fill = gray(0.99)) +
       geom_sf(data = reference_grid, aes_string(fill = var), col = NA) +
-      geom_sf(data = countries, color = gray(0.5), fill = NA) +
-      #geom_sf(data = ecoregions, color = gray(0.01), fill = NA) +
-      geom_sf(data = europe_outline, color = gray(0.01), fill = NA) +
-      # scale_fill_gradient2(low = RColorBrewer::brewer.pal(3, "Set1")[[2]], 
-      #                      mid = "white", 
-      #                      high = RColorBrewer::brewer.pal(3, "Set1")[[1]],
-      #                      limits = c(-2, 4)) +
+      geom_sf(data = countries, color = gray(0.5), fill = NA, size = 0.25) +
+      geom_sf(data = europe_outline, color = gray(0.01), fill = NA, size = 0.5) +
       scale_fill_gradientn(
         colors = c(RColorBrewer::brewer.pal(3, "Set1")[[2]], "white", RColorBrewer::brewer.pal(3, "Set1")[[1]]),
         values = scales::rescale(c(-4, -3, -2, -1, 0, 1, 2, 4, 8)),
@@ -404,7 +400,7 @@ p_trends <- list(var = c("size_trend",
             #legend.position = c(0, 1),
             #legend.justification = c(-0.1, 1.3),
             #legend.background = element_rect(color = "black", fill = gray(0.99), size = 0.5),
-            #legend.direction = "horizontal",
+            legend.direction = "horizontal",
             legend.text = element_text(size = 8),
             legend.title = element_text(size = 8, vjust = 0.135),
             axis.text = element_blank(),
@@ -415,16 +411,16 @@ p_trends <- list(var = c("size_trend",
             # legend.box.margin = ggplot2::margin(0.15, 0.15, 0.15, 0.15),
             legend.margin = ggplot2::margin(0.75, 0.75, 0.75, 0.75),
             legend.box.margin = ggplot2::margin(-10, 0.15, 0.15, 0.15)) +
-      guides(fill = guide_colorbar(title.position = "bottom", barwidth = 0.5, barheight = 5)) +
+      guides(fill = guide_colorbar(title.position = "top", barwidth = 5, barheight = 0.5)) +
       labs(fill = unit, title = title) +
       coord_sf(expand = FALSE)
   })
 
 ggsave("results/disturbance_regime_trend.pdf", p_trends %>%
-         wrap_plots(ncol = 3), width = 7, height = 2.5, device = cairo_pdf)
+         wrap_plots(ncol = 3), width = 7, height = 3, device = cairo_pdf)
 
 ggsave("results/disturbance_regime_trend.png", p_trends %>%
-         wrap_plots(ncol = 3), width = 7, height = 2.5)
+         wrap_plots(ncol = 3), width = 7, height = 3)
 
 # Histrograms
 
@@ -454,6 +450,7 @@ p_trends_hist <- pmap(list(var = c("size_trend",
          theme(panel.grid = element_blank(), 
                panel.border = element_blank(),
                legend.position = "none",
+               axis.ticks = element_line(),
                axis.title = element_text(size = 9),
                axis.text = element_text(size = 8)) +
          labs(x = xlab, y = ylab) +
@@ -461,10 +458,10 @@ p_trends_hist <- pmap(list(var = c("size_trend",
      })
 
 ggsave("results/disturbance_regime_trend_hist.pdf", p_trends_hist %>%
-         wrap_plots(ncol = 3), width = 6.25, height = 1.75, device = cairo_pdf)
+         wrap_plots(ncol = 3), width = 6.25, height = 2, device = cairo_pdf)
 
 ggsave("results/disturbance_regime_trend_hist.png", p_trends_hist %>%
-         wrap_plots(ncol = 3), width = 6.25, height = 1.75)
+         wrap_plots(ncol = 3), width = 6.25, height = 2)
 
 #### Separate frequency and size trends ####
 
