@@ -14,7 +14,7 @@ model_inp <- countries %>%
   set_names(countries) %>%
   bind_rows(.id = "country")
 
-disturbances_ref <- read_csv("data/reference/disturbances.csv") %>%
+disturbances_ref <- read_csv("data/references/disturbances.csv") %>%
   filter(!(country == "Austria" & year_disturbance_1 == 1985))
 
 countries_processed <- intersect(disturbances_ref$country, model_inp$country)
