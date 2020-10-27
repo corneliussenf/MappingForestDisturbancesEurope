@@ -1,6 +1,6 @@
 # Mapping the forest disturbance regimes of Europe
 
-This repository holds data and code for producing forest disturbances maps across Europe using the LandTrendr disturbance detection algorithm. The maps are updated regularely and all updates are documented in this repository. For detailed descriptions of the different versions, see following papers:
+This repository holds data and code for producing forest disturbances maps across Europe using the LandTrendr disturbance detection algorithm. The maps are updated regularely and all updates to the code are documented in this repository. Note, however, that some data are very large and can't be distributed via GitHub. For detailed descriptions of the different versions, see following papers:
 
 Senf, C. and Seidl, R. (2020) Mapping the forest disturbance regimes of Europe. Nature Sustainability. https://www.nature.com/articles/s41893-020-00609-y (Version 1.0)
 
