@@ -1,4 +1,6 @@
 
+# Libraries ---------------------------------------------------------------
+
 library(tidyverse)
 library(randomForest)
 library(raster)
@@ -6,11 +8,15 @@ library(landscapemetrics)
 library(doParallel)
 library(foreach)
 
+# Settings ----------------------------------------------------------------
+
 rasterOptions(tmptime = 35, tmpdir = "temp/")
 
 mmu <- 3
 
-#### Get countires ####
+# Do predictions for each country -----------------------------------------
+
+### Get coutries to predict
 
 countries <- list.files("data/model_input") %>%
   str_split("_") %>%
@@ -22,29 +28,24 @@ model_inp <- countries %>%
   set_names(countries) %>%
   bind_rows(.id = "country")
 
-#### Predict disturbances ####
-
 countries_to_predict <- unique(model_inp$country)
 
-for(cntr in countries_to_predict) {
+#### Predict noforest-forest-disturbance
+
+countries_to_predict_tmp <- countries_to_predict[11:35]
+
+for(cntr in countries_to_predict_tmp) {
   
   print(paste0("Processing ", cntr, "..."))
   
   ### Load data
   
-  dir.create(paste0("prediction/", cntr), recursive = TRUE, showWarnings = FALSE)
-  
-  landtrednr_stack <- list.files(paste0("LandTrendr/landtrendr_mosaics/", cntr, "/"), pattern = "*.tif", full.names = TRUE) %>%
-    stack(.) # The LandTrendr outputs need to be created using Google Earth Engine https://github.com/eMapR/LT-GEE
-  
-  names(landtrednr_stack) <- as.vector(outer(c("year", "magnitude", "duration", "pre", "rate", "dsnr"), c("NBR", "TCW", "B5", "B7"), paste, sep = "."))
-  
-  habitat_metrics_stack <- list.files(paste0("LandTrendr/habitat_metrics_mosaics/", cntr, "/"), pattern = "*.tif", full.names = TRUE) %>%
-    map(stack) %>%
-    map(~ if (nlayers(.) == 14) {subset(., c(2, 8, 11))} else if (nlayers(.) == 3) {subset(., c(2, 1, 3))}) %>%
+  landtrednr_stack <- list.files(paste0("data/landtrendr_mosaics/", cntr, "/"), pattern = "*.tif", full.names = TRUE) %>%
     stack(.)
   
-  names(habitat_metrics_stack) <- as.vector(outer(c("TCG", "TCB", "TCW"), c("1985", "2017"), paste, sep = "."))
+  names(landtrednr_stack) <- as.vector(outer(c("year", "magnitude", "duration", "pre", "rate", "dsnr"), 
+                                             c(paste0("B", c(1:5, 7)), "NBR", "TCB", "TCG", "TCW"), 
+                                             paste, sep = "."))
   
   xy_coords_ras <- subset(landtrednr_stack, 1)
   xy_coords <- xyFromCell(xy_coords_ras, cell = 1:ncell(xy_coords_ras))
@@ -55,9 +56,9 @@ for(cntr in countries_to_predict) {
   xy_coords_ras <- stack(xy_coords_ras_x, xy_coords_ras_y)
   names(xy_coords_ras) <- c("x_coord", "y_coord")
   
-  prediction_input <- stack(landtrednr_stack, habitat_metrics_stack, xy_coords_ras)
+  prediction_input <- stack(landtrednr_stack, xy_coords_ras)
   
-  load("models/randomforest_07-14-2019.RData")
+  load("data/models/randomforest_11-04-2020.RData")
   
   ### Predict disturbance/stable/noforest
   
@@ -65,37 +66,32 @@ for(cntr in countries_to_predict) {
   
   #prediction_disturbance_forest_noforest <- predict(prediction_input, fit)
   
-  beginCluster(n = 2)
+  ncores <- ifelse(ncell(prediction_input) < 200000000, 20, ifelse(ncell(prediction_input) < 500000000, 10, 5))
+  
+  beginCluster(n = ncores)
   prediction_disturbance_forest_noforest <- clusterR(prediction_input, predict, args = list(model = fit), progress = "text")
   endCluster()
   
-  #writeRaster(prediction_disturbance_forest_noforest, "LandTrendr/temp/prediction_disturbance_forest_noforest_france.tif")
-  #prediction_disturbance_forest_noforest <- raster("LandTrendr/temp/prediction_disturbance_forest_noforest_france.tif")
+  dir.create(paste0("results/prediction/", cntr), recursive = TRUE, showWarnings = FALSE)
+  
+  writeRaster(prediction_disturbance_forest_noforest, paste0("results/prediction/", cntr, "/raw_prediction_", cntr, ".tif"), datatype = "INT1U", overwrite = TRUE)
   
   print(paste0("...predicting forestcover..."))
-  
-  # forestcover <- prediction_disturbance_forest_noforest %in% 1:2
-  # forestcover[is.na(prediction_disturbance_forest_noforest)] <- NA
   
   forestcover <- reclassify(prediction_disturbance_forest_noforest,
                             matrix(c(NA, NA, 0, 0, 1, 1, 2, 1, 3, 0), byrow = TRUE, ncol = 2))
   
-  writeRaster(forestcover, paste0("prediction/", cntr, "/prediction_forestcover_", cntr, ".tif"), datatype = "INT1U", overwrite = TRUE)
+  writeRaster(forestcover, paste0("results/prediction/", cntr, "/forestcover_", cntr, ".tif"), datatype = "INT1U", overwrite = TRUE)
   
-  ### Filter by patch-size
+  ### Apply minimum mapping unit
 
   print(paste0("...filtering by mmu..."))
   
   disturbance_map <- reclassify(prediction_disturbance_forest_noforest,
                                 matrix(c(NA, NA, 0, 0, 1, 1, 2, 0, 3, 0), byrow = TRUE, ncol = 2))
   
-  #disturbance_map <- raster("LandTrendr/temp/disturbance_map_france.tif")
-  
-  disturbance_map_patches <- get_patches(disturbance_map, directions = 4, class = 1)
+  disturbance_map_patches <- get_patches(disturbance_map, directions = 8, class = 1)
   disturbance_map_patches <- disturbance_map_patches$`1`
-  
-  #writeRaster(disturbance_map_patches, "LandTrendr/temp/disturbance_map_patches_france.tif")
-  #disturbance_map_patches <- raster("LandTrendr/temp/disturbance_map_patches_france.tif")
   
   disturbance_map_patches_freq <- freq(disturbance_map_patches)
   
@@ -104,8 +100,6 @@ for(cntr in countries_to_predict) {
   disturbance_map_patches <- reclassify(disturbance_map_patches, reclass_matrix)
   disturbance_map <- mask(disturbance_map, disturbance_map_patches)
   
-  #writeRaster(disturbance_map, "LandTrendr/temp/disturbance_map_france.tif")
-  
   ### Year of disturbance
   
   print(paste0("...estimating year of disturbance..."))
@@ -113,8 +107,7 @@ for(cntr in countries_to_predict) {
   calculate_mode <- function(x, na.rm = TRUE) {
     if (mean(is.na(x)) < 1) {
       x <- as.integer(x)
-      #if (mean(x == 1985) < 1) x[x == 1985] <- NA
-      x[x == 1985] <- NA
+      x[x == 1985] <- NA # Filter 1985 disturbances (not reliable as often long-term declines)
       x[x == 0] <- NA
       x <- x[!is.na(x)]
       if (length(x) > 0) {
@@ -125,27 +118,28 @@ for(cntr in countries_to_predict) {
           return(median(x, na.rm = TRUE))
         }  
       } else {
-       return(-99) 
+       return(NA)
       }
     } else (
-      return(-99)
+      return(NA)
     )
   }
   
-  #year <- calc(subset(landtrednr_stack, c("year.B5", "year.B7", "year.NBR", "year.TCW")), calculate_mode)
+  disturbance_years <- mask(subset(landtrednr_stack, c("year.B5", "year.B7", "year.NBR", "year.TCW")), disturbance_map)
   
-  beginCluster(n = 20)
-  year <- clusterR(subset(landtrednr_stack, c("year.B5", "year.B7", "year.NBR", "year.TCW")), calc, 
-                  args = list(fun = calculate_mode), progress = "text")
+  beginCluster(n = ncores)
+  year <- clusterR(disturbance_years, calc, args = list(fun = calculate_mode), progress = "text")
   endCluster()
   
-  year <- disturbance_map * year
+  #year <- calc(disturbance_years, calculate_mode)
   
-  writeRaster(year, paste0("prediction/", cntr, "/disturbance_year_", cntr, ".tif"), datatype = "INT2U", overwrite = TRUE)
+  ### Write our final disturbance map
+  
+  writeRaster(year, paste0("results/prediction/", cntr, "/disturbance_year_1986-2020_mmu", mmu, "px_", cntr, ".tif"), datatype = "INT2U", overwrite = TRUE)
   
 }
 
-#### Final filtering ####
+# Spatial filtering -------------------------------------------------------
 
 countries_to_filter <- unique(model_inp$country)
 
@@ -208,15 +202,15 @@ filtering <- function (x, large = FALSE) {
   
 }
 
-for (cntr in countries_to_filter[c(12)]) {
+for (cntr in countries_to_filter) {
   
   print(paste0("Filtering ", cntr))
     
-  year <- raster(paste0("prediction/", cntr, "/disturbance_year_", cntr, ".tif"))
+  year <- raster(paste0("results/prediction/", cntr, "/prediction_disturbance_year_mmu", mmu, "px_", cntr, ".tif"))
   
   # Determine file-size to decide whether year-by-year processing is necessary
   
-  filesize <- file.info(paste0("prediction/", cntr, "/disturbance_year_", cntr, ".tif"))$size
+  filesize <- file.info(paste0("results/prediction/", cntr, "/prediction_disturbance_year_mmu", mmu, "px_", cntr, ".tif"))$size
   
   # Apply filter
   
