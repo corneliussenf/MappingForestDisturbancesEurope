@@ -32,7 +32,7 @@ countries_to_predict <- unique(model_inp$country)
 
 #### Predict noforest-forest-disturbance
 
-countries_to_predict_tmp <- countries_to_predict[11:35]
+countries_to_predict_tmp <- countries_to_predict[1:35]
 
 for(cntr in countries_to_predict_tmp) {
   
@@ -44,7 +44,7 @@ for(cntr in countries_to_predict_tmp) {
     stack(.)
   
   names(landtrednr_stack) <- as.vector(outer(c("year", "magnitude", "duration", "pre", "rate", "dsnr"), 
-                                             c(paste0("B", c(1:5, 7)), "NBR", "TCB", "TCG", "TCW"), 
+                                             c(paste0("B", c(5, 7)), "NBR", "TCW"), 
                                              paste, sep = "."))
   
   xy_coords_ras <- subset(landtrednr_stack, 1)
@@ -66,7 +66,9 @@ for(cntr in countries_to_predict_tmp) {
   
   #prediction_disturbance_forest_noforest <- predict(prediction_input, fit)
   
-  ncores <- ifelse(ncell(prediction_input) < 200000000, 20, ifelse(ncell(prediction_input) < 500000000, 10, 5))
+  ncores <- ifelse(ncell(prediction_input) < 200000000, 20, 
+                   ifelse(ncell(prediction_input) < 700000000, 10, 
+                          ifelse(ncell(prediction_input) < 1000000000, 5, 2)))
   
   beginCluster(n = ncores)
   prediction_disturbance_forest_noforest <- clusterR(prediction_input, predict, args = list(model = fit), progress = "text")
@@ -85,6 +87,8 @@ for(cntr in countries_to_predict_tmp) {
   
   ### Apply minimum mapping unit
 
+  #prediction_disturbance_forest_noforest <- raster(paste0("results/prediction/", cntr, "/raw_prediction_", cntr, ".tif"), datatype = "INT1U", overwrite = TRUE)
+  
   print(paste0("...filtering by mmu..."))
   
   disturbance_map <- reclassify(prediction_disturbance_forest_noforest,
@@ -125,13 +129,17 @@ for(cntr in countries_to_predict_tmp) {
     )
   }
   
-  disturbance_years <- mask(subset(landtrednr_stack, c("year.B5", "year.B7", "year.NBR", "year.TCW")), disturbance_map)
+  disturbance_years <- subset(landtrednr_stack, c("year.B5", "year.B7", "year.NBR", "year.TCW"))
+  
+  if (!(extent(disturbance_years) == extent(disturbance_map))) {
+    disturbance_years <- crop(disturbance_years, disturbance_map)  
+  }
+  
+  disturbance_years <- mask(disturbance_years, disturbance_map)
   
   beginCluster(n = ncores)
   year <- clusterR(disturbance_years, calc, args = list(fun = calculate_mode), progress = "text")
   endCluster()
-  
-  #year <- calc(disturbance_years, calculate_mode)
   
   ### Write our final disturbance map
   

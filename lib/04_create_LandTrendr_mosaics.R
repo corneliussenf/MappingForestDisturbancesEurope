@@ -29,6 +29,7 @@ for (cntr in unique(model_inp$country)) {
   print(paste("Running mosaicing for", cntr))
   
   # Fix country polygons
+  
   outline <- shapefile(paste0("data/countries/", cntr, ".shp"))
   outline <- gBuffer(outline, 0, byid = TRUE)
   rgdal::writeOGR(outline, "data/countries", cntr, "ESRI Shapefile", overwrite_layer = TRUE)
@@ -42,7 +43,7 @@ for (cntr in unique(model_inp$country)) {
     if (!file.exists(outfile)) {
       
       filelist <- list.files(landtredr_path, pattern = glob2rx(paste0("*", cntr, "*", b, "*.tif")), recursive = TRUE, full.names = TRUE)
-        
+      
       gdalwarp(srcfile = filelist,
                dstfile = outfile,
                t_srs = "EPSG:3035",
@@ -53,17 +54,19 @@ for (cntr in unique(model_inp$country)) {
                cutline = paste0("data/countries/", cntr, ".shp"),
                crop_to_cutline = TRUE,
                dstnodata = "-32768")
-    
+      
       print("   ... fisnished!")
       
     } else {
       
       print("   ... skipping as already processed!")
-        
+      
     }
-  
+    
   }
   
 }
+
+
 
 

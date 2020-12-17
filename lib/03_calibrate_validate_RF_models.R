@@ -7,6 +7,7 @@ library(randomForest)
 # Get data ----------------------------------------------------------------
 
 samplesizes <- read_delim("data/references/sample_sizes.csv", delim = ";")
+samplesizes <- samplesizes[-((nrow(samplesizes) - 1):nrow(samplesizes)), ]
 
 countries <- list.files("data/model_input") %>%
   str_split("_") %>%
@@ -57,22 +58,20 @@ model_inp <- model_inp %>%
     
     # Filter period 1986:2016 for Central Europe (i.e., data from Senf et al. 2018)
     
-      country %in% c("austria", "czechia", "germany", "poland", "slovakia", "switzerland") &
-        year.B1 %in% 1985:2016 & year.B2 %in% 1985:2016 & year.B3 %in% 1985:2016 &
-        year.B4 %in% 1985:2016 & year.B5 %in% 1985:2016 & year.B7 %in% 1985:2016 &
-        year.NBR %in% 1985:2016 & year.TCB %in% 1985:2016 & year.TCG %in% 1985:2016 & year.TCW %in% 1985:2016 |
-    
+    country %in% c("austria", "czechia", "germany", "poland", "slovakia", "switzerland") &
+      year.B5 %in% 1985:2016 & year.B7 %in% 1985:2016 &
+      year.NBR %in% 1985:2016 & year.TCW %in% 1985:2016 |
+      
       # Filter period 1986:2018 for rest of Europe
       
       country %in% countries[!(countries %in% c("austria", "czechia", "germany", "poland", "slovakia", "switzerland"))] &
-        year.B1 %in% 1985:2018 & year.B2 %in% 1985:2018 & year.B3 %in% 1985:2018 &
-        year.B4 %in% 1985:2018 & year.B5 %in% 1985:2018 & year.B7 %in% 1985:2018 &
-        year.NBR %in% 1985:2018 & year.TCB %in% 1985:2018 & year.TCG %in% 1985:2018 & year.TCW %in% 1985:2018 |
+      year.B5 %in% 1985:2018 & year.B7 %in% 1985:2018 &
+      year.NBR %in% 1985:2018 & year.TCW %in% 1985:2018 |
       
       # And include non-disturbance plots
-        
-      year.B1 == 0 | year.B2 == 0 | year.B3 == 0 | year.B4 == 0 | year.B5 == 0 | year.B7 == 0 | 
-      year.NBR == 0 | year.TCB == 0 | year.TCG == 0 | year.TCW == 0)
+      
+      year.B5 == 0 | year.B7 == 0 | 
+      year.NBR == 0 | year.TCW == 0)
 
 model_inp %>%
   filter(class != "Noforest") %>%
@@ -80,7 +79,13 @@ model_inp %>%
   summarize(min = min(year_disturbance_1, na.rm = TRUE),
             max = max(year_disturbance_1, na.rm = TRUE))
 
+# Filter Noforest pixels that were sampled outside country areas (water, etc.) and that are 0 (nodata) as this skewes the accuracy assessment
+
+model_inp <- model_inp %>% filter_at(.vars = vars(TCG.1985:TCW.2017), all_vars(. != 0))
+
 table(model_inp$country, model_inp$class)
+
+write_csv(model_inp %>% dplyr::select(x_coord, y_coord, class), "temp/refs.csv")
 
 # Sample cal/val data -----------------------------------------------------
 
@@ -105,24 +110,38 @@ model_val <- model_val %>%
   mutate(country_class = as.factor(as.integer(factor(country)))) %>%
   mutate(class = factor(class))
 
+# n_train <- 100000
+# 
+# train_size <- table(model_cal$country, model_cal$class)
+# train_size <- cbind(train_size, sum.is = apply(train_size, 1, sum))
+# train_size <- as.data.frame(train_size) %>%
+#   rownames_to_column(., var = "country") %>%
+#   left_join(samplesizes %>% dplyr::select(country_name_short, country_area_km2), c("country" = "country_name_short")) %>%
+#   mutate(weight = country_area_km2 / sum(country_area_km2)) %>%
+#   mutate(sum.should = round(n_train * weight, 0)) %>%
+#   mutate(dif = sum.is - sum.should)
+# 
+# model_cal <- model_cal %>%
+#   split(.$country) %>%
+#   map(~ sample_n(., train_size[train_size$country == unique(.$country), "sum.should"], replace = TRUE)) %>%
+#   bind_rows()
+# 
+# table(model_cal$country, model_cal$class)
+
 # Fit model ---------------------------------------------------------------
 
 predictors <-  model_cal %>% 
-  dplyr::select(year.B1:dsnr.TCW) %>%
+  dplyr::select(year.B5:dsnr.TCW, TCG.1985:TCW.2017) %>%
   names() %>%
   grep("year", ., invert = TRUE, value = TRUE)
 
 print(predictors)
 
+table(model_cal$class)
+
 fit <- randomForest(as.formula(paste0("class ~", paste(predictors, collapse = "+"), " + x_coord + y_coord")),
                     data = model_cal,
                     ntree = 500)
-
-plot(fit)
-
-fit
-
-save(fit, file = paste0("data/models/randomforest_", format(Sys.Date(), format="%m-%d-%Y"), ".RData"))
 
 # Validation --------------------------------------------------------------
 
@@ -132,7 +151,7 @@ predict <- predict(fit, newdata = model_val)
 
 model_val$predicted <- predict
 
-conf <- table(model_val$predicted, model_val$class)
+conf <- table(model_val$predicted,model_val$class)
 
 conf
 
@@ -203,15 +222,15 @@ model_val <- model_val %>%
     predicted == "Forest" & class == "Disturbance" ~ "Omission",
     predicted == "Disturbance" & class == "Forest" ~ "Commission",
     predicted == "Disturbance" & class == "Disturbance" ~ "None"
-    ))
+  ))
 
 p <- ggplot(model_val %>% 
-         filter(!is.na(error_type)) %>%
-         dplyr::select(magnitude.B5, magnitude.B7, magnitude.NBR, magnitude.TCW,
-                       error_type) %>%
-         gather(key = band, value = value, -error_type) %>%
-         separate("band", c("metric", "band"), "\\."), 
-       aes(x = band, y = value, fill = error_type)) +
+              filter(!is.na(error_type)) %>%
+              dplyr::select(magnitude.B5, magnitude.B7, magnitude.NBR, magnitude.TCW,
+                            error_type) %>%
+              gather(key = band, value = value, -error_type) %>%
+              separate("band", c("metric", "band"), "\\."), 
+            aes(x = band, y = value, fill = error_type)) +
   geom_boxplot() +
   theme_minimal() +
   coord_flip() +
