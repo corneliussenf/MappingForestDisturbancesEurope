@@ -110,24 +110,6 @@ model_val <- model_val %>%
   mutate(country_class = as.factor(as.integer(factor(country)))) %>%
   mutate(class = factor(class))
 
-# n_train <- 100000
-# 
-# train_size <- table(model_cal$country, model_cal$class)
-# train_size <- cbind(train_size, sum.is = apply(train_size, 1, sum))
-# train_size <- as.data.frame(train_size) %>%
-#   rownames_to_column(., var = "country") %>%
-#   left_join(samplesizes %>% dplyr::select(country_name_short, country_area_km2), c("country" = "country_name_short")) %>%
-#   mutate(weight = country_area_km2 / sum(country_area_km2)) %>%
-#   mutate(sum.should = round(n_train * weight, 0)) %>%
-#   mutate(dif = sum.is - sum.should)
-# 
-# model_cal <- model_cal %>%
-#   split(.$country) %>%
-#   map(~ sample_n(., train_size[train_size$country == unique(.$country), "sum.should"], replace = TRUE)) %>%
-#   bind_rows()
-# 
-# table(model_cal$country, model_cal$class)
-
 # Fit model ---------------------------------------------------------------
 
 predictors <-  model_cal %>% 
