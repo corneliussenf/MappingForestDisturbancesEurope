@@ -133,13 +133,46 @@ predict <- predict(fit, newdata = model_val)
 
 model_val$predicted <- predict
 
-conf <- table(model_val$predicted,model_val$class)
+# Bootstrap to obtain uncertainties
 
-conf
+acc <- data.frame(
+  v1 = NULL,
+  v2 = NULL,
+  v3 = NULL,
+  v4 = NULL,
+  v5 = NULL,
+  v6 = NULL,
+  v7 = NULL
+)
 
-1 - diag(conf) / rowSums(conf) # Comission error
-1 - diag(conf) / colSums(conf) # Omission error
-sum(diag(conf)) / sum(conf) # Overall accuracy
+for (i in 1:1000) {
+  
+  tmp <- model_val %>% sample_n(size = nrow(model_val), replace = TRUE)
+  
+  conf <- table(tmp$predicted, tmp$class)
+  
+  ce <- 1 - diag(conf) / rowSums(conf)
+  oe <- 1 - diag(conf) / colSums(conf)
+  oa <- sum(diag(conf)) / sum(conf)
+
+  acc <- rbind(acc, c(ce, oe, oa))  
+    
+}
+
+names(acc) <- c("commission_disturbance",
+                "commission_forest",
+                "commission_noforest",
+                "omission_disturbance",
+                "omission_forest",
+                "omission_noforest",
+                "overallaccuracy")
+
+apply(acc, 2, mean)
+apply(acc, 2, sd)
+
+conf <- table(model_val$predicted, model_val$class)
+
+conf / rowSums(conf)
 
 ### Temporal accuracy
 

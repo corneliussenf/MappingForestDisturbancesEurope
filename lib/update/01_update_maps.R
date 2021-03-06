@@ -1,5 +1,5 @@
 
-# Libraries and setting ---------------------------------------------------
+# Libraries ---------------------------------------------------------------
 
 library(tidyverse)
 library(randomForest)
@@ -11,8 +11,24 @@ library(landscapemetrics)
 library(doParallel)
 library(foreach)
 
+
+# Settings ----------------------------------------------------------------
+
+# Raster options
 rasterOptions(tmptime = 35, tmpdir = "temp/")
 
+# LandTrendr path
+landtredr_path <- "/media/homedrive/data/Public/LandTrendr/greatest_change" # Path to landtrendr runs (stored in folder with naming 'landtrendr_[country]')
+
+# Set minimum mapping unit
+mmu <- 3
+
+# update periods
+update_years <- 2017:2020
+
+# Versioning
+base_version <- "version1.0"
+update_version <- "version1.1"
 
 # Create mosaics for prediction -------------------------------------------
 
@@ -21,20 +37,16 @@ countries <- list.files("data/model_input") %>%
   map(~ .[3] %>% gsub(".csv", "", .)) %>%
   unlist()
 
-landtredr_path <- "/media/homedrive/data/Public/LandTrendr/greatest_change" # Path to landtrendr runs (stored in folder with naming 'landtrendr_[country]')
-habitat_metrics_path <- "/media/homedrive/data/Public/LandTrendr/habitat_metrics" # Path to habitat metrics (stored in folder with naming 'habitat_metrics_[country]_[year]')
-
 model_inp <- countries %>%
   map(~ read_csv(paste0("data/model_input/model_input_", ., ".csv"))) %>%
   set_names(countries) %>%
   bind_rows(.id = "country")
 
-band_indices <- c(paste0("B", c(1:5, 7)), "NBR", "TCB", "TCG", "TCW")
+band_indices <- c(paste0("B", c(5, 7)), "NBR", "TCW")
 
 for (cntr in unique(model_inp$country)) {
   
   dir.create(paste0("data/landtrendr_mosaics/", cntr), showWarnings = FALSE, recursive = TRUE)
-  dir.create(paste0("data/habitat_metrics_mosaics/", cntr), showWarnings = FALSE, recursive = TRUE)
   
   print(paste("Running mosaicing for", cntr))
   
@@ -76,22 +88,6 @@ for (cntr in unique(model_inp$country)) {
     }
     
   }
-  
-  # Habitat Metrics
-  
-  c("1984-1986", "2016-2018") %>%
-    map(~ list.files(habitat_metrics_path, pattern = glob2rx(paste0("*", cntr, "*", ., "*.tif")), recursive = TRUE, full.names = TRUE)) %>%
-    map2(.y = c("1984-1986", "2016-2018"),
-         ~ gdalwarp(srcfile = .,
-                    dstfile = paste0("data/habitat_metrics_mosaics/habitat_metrics_", cntr, "_", .y, ".tif"),
-                    t_srs = "EPSG:3035",
-                    tr = c(30, 30),
-                    output_Raster = FALSE,
-                    overwrite = TRUE,
-                    verbose = TRUE,
-                    cutline = paste0("LandTrendr/countries/", cntr, ".shp"),
-                    crop_to_cutline = TRUE,
-                    dstnodata = "-32768"))
   
 }
 
@@ -208,10 +204,6 @@ sum(diag(conf)) / sum(conf) # Overall accuracy
 
 # Prediction --------------------------------------------------------------
 
-# Set minimum mapping unit
-
-mmu <- 3
-
 # Get coutries to predict
 
 countries <- list.files("data/model_input") %>%
@@ -228,16 +220,12 @@ countries_to_predict <- unique(model_inp$country)
 
 # Predict noforest-forest-disturbance
 
-countries_to_predict_sizes <- list.files("data/landtrendr_mosaics", "B1", recursive = TRUE, full.names = TRUE) %>%
+countries_to_predict_sizes <- list.files("data/landtrendr_mosaics", "NBR", recursive = TRUE, full.names = TRUE) %>%
   file.info(.) %>%
   data.frame(country = countries_to_predict, size = .$size) %>%
   arrange(., size)
 
-countries_to_predict_tmp <- as.character(countries_to_predict_sizes[c(14:16, 18:26, 28:35), "country"])
-
-extent_problem <- c("poland", "portugal", "serbia")
-
-countries_to_predict_tmp <- countries_to_predict_tmp[!(countries_to_predict_tmp %in% extent_problem)]
+countries_to_predict_tmp <- as.character(countries_to_predict_sizes[c(30), "country"])
 
 for(cntr in countries_to_predict_tmp) {
   
@@ -249,12 +237,8 @@ for(cntr in countries_to_predict_tmp) {
     stack(.)
   
   names(landtrednr_stack) <- as.vector(outer(c("year", "magnitude", "duration", "pre", "rate", "dsnr"), 
-                                             c(paste0("B", c(1:5, 7)), "NBR", "TCB", "TCG", "TCW"), 
+                                             c(paste0("B", c(5, 7)), "NBR", "TCW"), 
                                              paste, sep = "."))
-  
-  landtrednr_stack <- subset(landtrednr_stack, as.vector(outer(c("year", "magnitude", "duration", "pre", "rate", "dsnr"), 
-                                                               c(paste0("B", c(5, 7)), "NBR", "TCW"), 
-                                                               paste, sep = ".")))
   
   xy_coords_ras <- subset(landtrednr_stack, 1)
   xy_coords <- xyFromCell(xy_coords_ras, cell = 1:ncell(xy_coords_ras))
@@ -283,44 +267,31 @@ for(cntr in countries_to_predict_tmp) {
   
   dir.create(paste0("results/update/", cntr), recursive = TRUE, showWarnings = FALSE)
   
-  if (cntr %in% extent_problem) {
-    
-    writeRaster(prediction_disturbance_forest_noforest, paste0("results/prediction/", cntr, "/raw_prediction_", cntr, "_TMP.tif"), datatype = "INT1U", overwrite = TRUE)
-    
-    prediction_disturbance_forest_noforest <- gdalwarp(srcfile = paste0("results/prediction/", cntr, "/raw_prediction_", cntr, "_TMP.tif"),
-                                                       dstfile = paste0("results/prediction/", cntr, "/raw_prediction_", cntr, ".tif"),
-                                                       t_srs = "EPSG:3035",
-                                                       tr = c(30, 30),
-                                                       output_Raster = TRUE,
-                                                       overwrite = TRUE,
-                                                       verbose = TRUE,
-                                                       cutline = paste0("data/countries/", cntr, ".shp"),
-                                                       crop_to_cutline = TRUE,
-                                                       dstnodata = "0")
-    
-    file.remove(paste0("results/prediction/", cntr, "/raw_prediction_", cntr, "_TMP.tif"))
-    
-  } else {
-    
-    writeRaster(prediction_disturbance_forest_noforest, paste0("results/update/", cntr, "/raw_prediction_", cntr, ".tif"), datatype = "INT1U", overwrite = TRUE)
-    
-  }
+  writeRaster(prediction_disturbance_forest_noforest, paste0("results/update/", cntr, "/raw_prediction_", cntr, ".tif"), datatype = "INT1U", overwrite = TRUE)
+  #prediction_disturbance_forest_noforest <- raster(paste0("results/update/", cntr, "/raw_prediction_", cntr, ".tif"), datatype = "INT1U", overwrite = TRUE)
   
   # Apply minimum mapping unit
   
   print(paste0("...filtering by mmu..."))
   
-  disturbance_map <- reclassify(prediction_disturbance_forest_noforest,
-                                matrix(c(NA, NA, 0, 0, 1, 1, 2, 0, 3, 0), byrow = TRUE, ncol = 2))
+  beginCluster(n = 20)
+  disturbance_map <- clusterR(prediction_disturbance_forest_noforest, reclassify, 
+                              args = list(rcl = matrix(c(NA, NA, 0, 0, 1, 1, 2, 0, 3, 0), byrow = TRUE, ncol = 2)), 
+                              progress = "text")
+  endCluster()
   
-  disturbance_map_patches <- get_patches(disturbance_map, directions = 8, class = 1)
-  disturbance_map_patches <- disturbance_map_patches$`1`
+  disturbance_map_patches <- clump(disturbance_map, directions = 8)
   
   disturbance_map_patches_freq <- freq(disturbance_map_patches)
   
   reclass_matrix <- cbind(disturbance_map_patches_freq[, 1], ifelse(disturbance_map_patches_freq[, 2] < mmu, NA, disturbance_map_patches_freq[, 1]))
   
-  disturbance_map_patches <- reclassify(disturbance_map_patches, reclass_matrix)
+  beginCluster(n = 20)
+  disturbance_map_patches <- clusterR(disturbance_map_patches, reclassify, 
+                              args = list(rcl = reclass_matrix), 
+                              progress = "text")
+  endCluster()
+  
   disturbance_map <- mask(disturbance_map, disturbance_map_patches)
   
   # Year of disturbance
@@ -356,7 +327,7 @@ for(cntr in countries_to_predict_tmp) {
   
   disturbance_years <- mask(disturbance_years, disturbance_map)
   
-  beginCluster(n = ncores)
+  beginCluster(n = 20)
   year <- clusterR(disturbance_years, calc, args = list(fun = calculate_mode), progress = "text")
   endCluster()
   
@@ -368,25 +339,18 @@ for(cntr in countries_to_predict_tmp) {
 
 # Update previous map with newest disturbances ----------------------------
 
-# Settings
-
-update_years <- 2017:2020
-
-mmu <- 3
-
-base_version <- "version1.0"
-
-update_version <- "version1.1"
-
 # Get coutries to update
 
 countries_update <- list.files("results/update")
 
 skip <- list.files("results/version1.1")
+#skip <- c()
 
 for (cntr in countries_update[!(countries_update %in% skip)]) {
   
   print(paste0(cntr, "..."))
+  
+  ### Load updated map and mask all years not to be updated
   
   year <- raster(paste0("results/update/", cntr, "/disturbance_year_update_", mmu, "px_", cntr, ".tif"))
   
@@ -397,7 +361,14 @@ for (cntr in countries_update[!(countries_update %in% skip)]) {
                        ifelse((year_min:year_max) %in% update_years, (year_min:year_max), NA)), 
                      nrow = length(year_min:year_max))
   
-  year_update <- reclassify(year, rcl_update)
+  beginCluster(n = 20)
+  year_update <- clusterR(year, 
+                          reclassify, 
+                          args = list(rcl = rcl_update), 
+                          progress = "text")
+  endCluster()
+  
+  ### Load base map and mask all years to be updated
   
   year_base <- raster(paste0("results/", base_version, "/", cntr, "/disturbance_year_filtered_", cntr, ".tif"))
   
@@ -405,7 +376,16 @@ for (cntr in countries_update[!(countries_update %in% skip)]) {
                        ifelse((year_min:year_max) %in% update_years, NA, (year_min:year_max))), 
                      nrow = length(year_min:year_max))
   
-  year_base <- reclassify(year_base, rcl_base)
+  beginCluster(n = 20)
+  year_base <- clusterR(year_base, 
+                        reclassify, 
+                        args = list(rcl = rcl_base), 
+                        progress = "text")
+  endCluster()
+  
+  ### Check if extent/origin are equal, if not crop/project update to base map
+  
+  print("...matching extent und projection...")
   
   if (extent(year_base) != extent(year_update)) {
     
@@ -413,25 +393,125 @@ for (cntr in countries_update[!(countries_update %in% skip)]) {
     
     if (extent(year_base) != extent(year_update)) {
       
-      year_update <- projectRaster(year_update, to = year_base)
-    
+      beginCluster(n = 20)
+      year_update <- projectRaster(year_update, to = year_base, method = "ngb")
+      endCluster()
+      
     }
   
   }
   
-  update <- max(stack(year_base, year_update), na.rm = TRUE)
+  ### Apply spatial filters only to update to avoid double-filtering of old disturbances
   
-  ### TODO! ###
-  #
-  # Mask by forest mask to avoid disturbances in water areas (e.g., Switzerland, Netherlands) and other non-treed areas!
-  #
-  ###
+  print("...spatial filtering...")
   
-  ### TODO! ###
-  #
-  # Apply spatial filters before updating to avoid double-filtering of old disturbances
-  #
-  ###
+  filtering <- function (x) {
+    
+    patch_updater <- 0
+    
+    dir.create(paste0("temp/", cntr), showWarnings = FALSE)
+    
+    for (y in update_years) {
+      
+      beginCluster(n = 20)
+      x_tmp <- reclassify(x, matrix(c(update_years, ifelse(update_years == y, 1, NA)), ncol = 2))
+      endCluster()
+      
+      map_patches_tmp <- clump(x_tmp, directions = 8)
+      map_patches_tmp <- map_patches_tmp[[1]] + patch_updater
+      writeRaster(map_patches_tmp, paste0("temp/", cntr, "/patches_tmp_", y, ".tif"), datatype = "INT4U", overwrite = TRUE)
+      patch_updater <- cellStats(map_patches_tmp, max)
+      
+    }
+    
+    map_patches <- list.files(paste0("temp/", cntr, "/"), glob2rx("patches_tmp_*tif"), full.names = TRUE) %>%
+      map(raster)
+    
+    map_patches_freq <- map_patches %>%
+      map(freq)
+    
+    for (i in 1:length(map_patches)) {
+      
+      map_tmp <- map_patches[[i]]
+      map_freq_tmp <- map_patches_freq[[i]]
+      reclass_matrix <- map_freq_tmp
+      reclass_matrix <- cbind(reclass_matrix[, 1], ifelse(reclass_matrix[, 2] == 1, 999999, reclass_matrix[, 1]))
+      
+      map_tmp <- reclassify(map_tmp, reclass_matrix)
+      
+      map_patches[[i]] <- map_tmp
+      
+    }
+    
+    map_filter <- stack(map_patches)
+    
+    map_filter <- max(map_filter, na.rm = TRUE)
+    
+    wm <- matrix(1, nrow = 3, ncol = 3)
+    wm[2, 2] <- 0
+    
+    map_ngh <- raster::focal(x, w = wm, fun = function(x, na.rm = TRUE) { if (length(x) > 1) {modal(x, ties = "lowest", na.rm = TRUE)} else {NA}}, na.rm = TRUE)
+    
+    writeRaster(map_filter, "temp/map_filter.tif", overwrite = TRUE)
+    
+    x[map_filter == 999999] <- map_ngh[map_filter == 999999]
+    
+    return(x)
+    
+  }
+  
+  year_update_filtered_1 <- filtering(year_update)
+  year_update_filtered_2 <- filtering(year_update_filtered_1)
+  
+  # Set remaining 0-values to NA
+  
+  year_update_filtered_2 <- reclassify(year_update_filtered_2, matrix(c(0, 1985:2018, NA, 1985:2018), ncol = 2))
+  
+  # Re-evaluate MMU
+  
+  year_update_filtered_2_binary <- reclassify(year_update_filtered_2, 
+                                       matrix(c(update_years, rep(1, length(update_years))), ncol = 2))
+  
+  year_update_filtered_2_patches <- clump(year_update_filtered_2_binary, directions = 8)
+  
+  reclass_matrix <- freq(year_update_filtered_2_patches)
+  reclass_matrix <- cbind(reclass_matrix[, 1], ifelse(reclass_matrix[, 2] < mmu, NA, reclass_matrix[, 1]))
+  
+  year_update_filtered_2_patches <- reclassify(year_update_filtered_2_patches, reclass_matrix)
+  
+  year_update_filtered_2 <- mask(year_update_filtered_2, year_update_filtered_2_patches)
+  
+  # Fill holes
+  
+  year_update_filtered_2_gapfiller <- focal(year_update_filtered_2, 
+                                            matrix(c(NA, 1, NA, 1, NA, 1, NA, 1, NA), nrow = 3, ncol = 3), 
+                                            fun = function(x, ...) {
+                                              if (sum(!is.na(x)) == 4) {
+                                                return(modal(x, ...))
+                                              } else {
+                                                return(NA)
+                                              }
+                                            }, na.rm = TRUE)
+  
+  year_update_filtered_2 <- cover(year_update_filtered_2, year_update_filtered_2_gapfiller)
+  
+  ### Stack update and base map and calculate maximum disturbance year
+  
+  print("...final update...")
+  
+  year_base_update <- stack(year_base, year_update_filtered_2)
+  
+  update <- max(year_base_update, na.rm = TRUE)
+  
+  ### Mask update by base forest mask to avoid disturbances in water areas and other non-treed areas
+  
+  print("...final masking...")
+  
+  forest <- raster(paste0("results/version1.0/", cntr, "/prediction_forestcover_", cntr, ".tif"))
+  
+  update <- mask(update, forest, maskvalue = 0)
+  
+  ### Write out
   
   dir.create(paste0("results/", update_version, "/", cntr), recursive = TRUE, showWarnings = FALSE)
   
@@ -439,7 +519,28 @@ for (cntr in countries_update[!(countries_update %in% skip)]) {
   
 }
 
-# Spatial filtering -------------------------------------------------------
+# Estimate disturbance severity -------------------------------------------
+
+countries_to_process <- list.files(paste0("results/", update_version))
+
+for (cntr in countries_to_process) {
+  
+  print(cntr)
+  
+  landtrednr_stack <- list.files(paste0("data/landtrendr_mosaics/", cntr, "/"), pattern = "*.tif", full.names = TRUE) %>%
+    stack(.)
+  
+  names(landtrednr_stack) <- as.vector(outer(c("year", "magnitude", "duration", "pre", "rate", "dsnr"), c("NBR", "TCW", "B5", "B7"), paste, sep = "."))
+  
+  mask_ras <- raster(paste0("results/", update_version, "/", cntr, "/disturbance_year_", cntr, ".tif"))
+  
+  landtrednr_stack_disturbance <- mask(landtrednr_stack, mask = mask_ras)
+  
+  names(landtrednr_stack_disturbance) <- as.vector(outer(c("year", "magnitude", "duration", "pre", "rate", "dsnr"), c("NBR", "TCW", "B5", "B7"), paste, sep = "."))
+  
+  writeRaster(landtrednr_stack_disturbance, paste0("results/", update_version, "/", cntr, "/landtrendr_metrics_", cntr, ".tif"), datatype = "FLT4S", overwrite = TRUE)
+  
+}
 
 
 

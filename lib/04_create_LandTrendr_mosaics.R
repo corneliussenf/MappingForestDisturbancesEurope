@@ -21,7 +21,7 @@ model_inp <- countries %>%
   set_names(countries) %>%
   bind_rows(.id = "country")
 
-band_indices <- c(paste0("B", c(1:5, 7)), "NBR", "TCB", "TCG", "TCW")
+band_indices <- c(paste0("B", c(5, 7)), "NBR", "TCW")
 
 for (cntr in unique(model_inp$country)) {
   
