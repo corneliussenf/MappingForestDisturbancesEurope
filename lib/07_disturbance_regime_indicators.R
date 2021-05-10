@@ -13,9 +13,9 @@ country_master <- read_delim("data/countries_master.csv", delim = ";") %>%
 
 ending <- "hexagon_50km"
 
-reference_grid <- read_sf(paste0("data/admin/referencegrid/", ending, ".shp"))
+reference_grid <- read_sf(paste0("data/gis/referencegrid/", ending, ".shp"))
 
-ecoregions <- read_sf("data/admin/ecoregions/terrestrial_ecoregions_olson.shp")
+ecoregions <- read_sf("data/gis/ecoregions/terrestrial_ecoregions_olson.shp")
 ecoregions <- st_transform(ecoregions, CRS("+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"))
 
 ### Disturbance patches
@@ -139,12 +139,12 @@ for (i in 1:nrow(country_master)) {
 
 #### Load data ####
 
-ecoregions <- read_sf("data/admin/ecoregions/terrestrial_ecoregions_olson.shp")
+ecoregions <- read_sf("data/gis/ecoregions/terrestrial_ecoregions_olson.shp")
 ecoregions <- st_transform(ecoregions, CRS("+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"))
 
-reference_grid <- read_sf("data/admin/referencegrid/hexagon_50km.shp")
+reference_grid <- read_sf("data/gis/referencegrid/hexagon_50km.shp")
 
-countries <- read_sf("data/admin/borders/countries_europe_simplyfied.shp")
+countries <- read_sf("data/gis/borders/countries_europe_simplyfied.shp")
 
 country_master <- read_delim("data/countries_master.csv", delim = ";") %>%
   filter(country_name_short != "russia")
@@ -251,8 +251,8 @@ dat_grid_summary <- dat_grid %>%
             severity_trend = trend::sens.slope(severity)$estimate / severity_mean  * 100,
             rate_trend = trend::sens.slope(rate)$estimate / rate_mean * 100)
 
-reference_grid <- read_sf("data/admin/referencegrid/hexagon_50km.shp")
-europe_outline <- read_sf("data/admin/borders/countries_europe_outline_simplyfied.shp")
+reference_grid <- read_sf("data/gis/referencegrid/hexagon_50km.shp")
+europe_outline <- read_sf("data/gis/borders/countries_europe_outline_simplyfied.shp")
 world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
 world <- st_transform(world, projection(reference_grid))
 st_crs(world) <- st_crs(reference_grid)
@@ -849,7 +849,7 @@ dat_grid_summary <- dat_grid %>%
             severity_trend = trend::sens.slope(severity * 100)$estimate / severity_mean * 100,
             rate_trend = trend::sens.slope(rate)$estimate / rate_mean * 100)
 
-reference_grid <- read_sf("data/admin/referencegrid/hexagon_50km.shp")
+reference_grid <- read_sf("data/gis/referencegrid/hexagon_50km.shp")
 
 reference_grid <- reference_grid %>%
   #right_join(ecoregions_grid, by = c("id" = "grid_id"))

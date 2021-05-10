@@ -19,7 +19,7 @@ create_plots <- function(cntr, noforest_n) {
   
   forest_mask <- raster(paste0("data/forestmasks/forestmask_", cntr, ".tif"))
   
-  cntr_shapefile <- read_sf(paste0("data/countries/", cntr, ".shp"))
+  cntr_shapefile <- read_sf(paste0("data/gis/countries/", cntr, ".shp"))
   
   forest_mask_sample <- sampleRandom(forest_mask, noforest_n, na.rm = TRUE, sp = TRUE)
   forest_mask_sample_noforest <- subset(forest_mask_sample, forest_mask_sample@data[, 1] == 0)
