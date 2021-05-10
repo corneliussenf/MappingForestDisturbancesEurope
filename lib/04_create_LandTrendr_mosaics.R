@@ -32,9 +32,9 @@ for (cntr in unique(model_inp$country)) {
   
   # Fix country polygons
   
-  outline <- shapefile(paste0("data/countries/", cntr, ".shp"))
+  outline <- shapefile(paste0("data/gis/countries/", cntr, ".shp"))
   outline <- gBuffer(outline, 0, byid = TRUE)
-  rgdal::writeOGR(outline, "data/countries", cntr, "ESRI Shapefile", overwrite_layer = TRUE)
+  rgdal::writeOGR(outline, "data/gis/countries", cntr, "ESRI Shapefile", overwrite_layer = TRUE)
   
   ### LandTrendr
   
@@ -55,7 +55,7 @@ for (cntr in unique(model_inp$country)) {
                output_Raster = FALSE,
                overwrite = TRUE,
                verbose = TRUE,
-               cutline = paste0("data/countries/", cntr, ".shp"),
+               cutline = paste0("data/gis/countries/", cntr, ".shp"),
                crop_to_cutline = TRUE,
                dstnodata = "-32768")
       
